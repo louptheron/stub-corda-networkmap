@@ -54,7 +54,7 @@ compileTestKotlin {
 }
 
 
-// Configure the run task to start the Dropwizard service
+// Configure the run task to start the Dropwizard api
 run {
     args 'server', './src/main/resources/config/local.yaml'
 }

@@ -1,6 +1,10 @@
 package io.cryptoblk.networkmap
 
-import io.cryptoblk.networkmap.handler.NetworkMapHandler
+import io.cryptoblk.networkmap.infra.InMemoryNodeInfoRepository
+import io.cryptoblk.networkmap.infra.NodeInfoRepository
+import io.cryptoblk.networkmap.domain.NetworkMapHandler
+import io.cryptoblk.networkmap.domain.NetworkMapService
+import io.cryptoblk.networkmap.api.NetworkMapAPI
 import io.dropwizard.Application
 import io.dropwizard.Configuration
 import io.dropwizard.setup.Environment
@@ -33,22 +37,27 @@ class CacheControlFilter(val expiration: Int) : Filter {
     override fun destroy() {}
 
     @Throws(ServletException::class)
-    override fun init(arg0: FilterConfig) {
-    }
+    override fun init(arg0: FilterConfig) {}
 }
 
 data class NetworkMapConfig(var name: String = "unknown", var expiration: Int = 30) : Configuration()
 
-class StubApplication: Application<NetworkMapConfig>() {
+class Application: Application<NetworkMapConfig>() {
     override fun run(configuration: NetworkMapConfig, environment: Environment) {
         println("Running ${configuration.name}! -- cache for ${configuration.expiration}s")
-        val nmComp = NetworkMapHandler()
-        environment.jersey().register(nmComp)
+
+        val inMemoryNodeInfoRepo: NodeInfoRepository = InMemoryNodeInfoRepository
+
+        val nodeInfoHandler: NetworkMapService = NetworkMapHandler(inMemoryNodeInfoRepo)
+
+        val networkMapAPI = NetworkMapAPI(nodeInfoHandler)
+
+        environment.jersey().register(networkMapAPI)
         environment.servlets().addFilter("CacheControlFilter", CacheControlFilter(configuration.expiration)).
             addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*")
     }
 }
 
 fun main(args: Array<String>) {
-    StubApplication().run(*args)
+    Application().run(*args)
 }
