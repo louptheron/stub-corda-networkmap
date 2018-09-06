@@ -1,12 +1,11 @@
 package io.cryptoblk.networkmap.infra
 
-import io.cryptoblk.networkmap.domain.NodeInfoByte
 import net.corda.core.crypto.SecureHash
 
 interface NodeInfoRepository {
-    suspend fun findByHash(hash: SecureHash): NodeInfoByte?
+    suspend fun findByHash(hash: SecureHash): ByteArray?
 
-    suspend fun findAll(): List<NodeInfoByte>?
+    suspend fun findAll(): List<Pair<SecureHash, ByteArray>>?
 
-    suspend fun save(nodeInfo: NodeInfoByte)
+    suspend fun save(nodeInfo: Pair<SecureHash, ByteArray>)
 }

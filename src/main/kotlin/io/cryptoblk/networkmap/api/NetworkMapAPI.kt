@@ -1,7 +1,6 @@
 package io.cryptoblk.networkmap.api
 
 import io.cryptoblk.networkmap.domain.NetworkMapService
-import io.cryptoblk.networkmap.domain.NodeInfoByte
 import kotlinx.coroutines.experimental.runBlocking
 import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.SerializedBytes
@@ -20,14 +19,14 @@ import javax.ws.rs.core.Response
 class NetworkMapAPI(private val networkMap: NetworkMapService) {
 
     @POST
-    @Path("/publish")
+    @Path("/publishNodeInfo")
     fun handlePublish(input: ByteArray) = runBlocking {
         // For the node to upload its signed NodeInfoByte object to the network map.
         val factory = SerializerFactory(AllWhitelist, ClassLoader.getSystemClassLoader())
         val signedNodeInfo = DeserializationInput(factory).deserialize(SerializedBytes<SignedNodeInfo>(input))
-        val nodeInfoByte = NodeInfoByte(signedNodeInfo.raw.hash, signedNodeInfo.serialize().bytes)
+        val nodeInfoPair = Pair(signedNodeInfo.raw.hash, signedNodeInfo.serialize().bytes)
 
-        networkMap.handlePublish(nodeInfoByte)
+        networkMap.publishNodeInfo(nodeInfoPair)
     }
 
     @POST
@@ -41,7 +40,7 @@ class NetworkMapAPI(private val networkMap: NetworkMapService) {
         val networkMap = networkMap.generateNetworkMap()
 
         Response.ok(networkMap.serialize().bytes).build()
-        }
+    }
 
     @GET
     @Path("/node-info/{hash}")
@@ -49,7 +48,7 @@ class NetworkMapAPI(private val networkMap: NetworkMapService) {
         // Retrieve a signed NodeInfoByte as specified in the network map object.
         val hash = SecureHash.parse(inputHash)
 
-        val nodeInfoByte = networkMap.handleNodeInfo(hash)!!
+        val nodeInfoByte = networkMap.getNodeInfo(hash)!!
 
         nodeInfoByte.let {
             Response.ok(it).build()
@@ -62,7 +61,7 @@ class NetworkMapAPI(private val networkMap: NetworkMapService) {
         // Retrieve the signed network parameters (see below). The entire object is signed with the network map certificate which is also attached.
         val hash = SecureHash.parse(inputHash)
 
-        networkMap.handleNetworkParam(hash)?.let {
+        networkMap.getNetworkParameters(hash)?.let {
             Response.ok(it).build()
         } ?: Response.status(404).build()
     }

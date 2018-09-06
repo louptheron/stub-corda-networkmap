@@ -4,13 +4,13 @@ import net.corda.core.crypto.SecureHash
 
 interface NetworkMapService {
 
-    fun handlePublish(nodeInfo: NodeInfoByte)
+    fun publishNodeInfo(nodeInfo: Pair<SecureHash, ByteArray>)
 
     fun handleAckParam(bytes: ByteArray)
 
     fun generateNetworkMap(): ByteArray
 
-    fun handleNodeInfo(hash: SecureHash): ByteArray?
+    fun getNodeInfo(hash: SecureHash): ByteArray?
 
-    fun handleNetworkParam(hash: SecureHash): ByteArray?
+    fun getNetworkParameters(hash: SecureHash): ByteArray?
 }

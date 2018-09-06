@@ -5,6 +5,8 @@ import io.cryptoblk.networkmap.infra.NodeInfoRepository
 import io.cryptoblk.networkmap.domain.NetworkMapHandler
 import io.cryptoblk.networkmap.domain.NetworkMapService
 import io.cryptoblk.networkmap.api.NetworkMapAPI
+import io.cryptoblk.networkmap.infra.InMemoryNetworkParametersRepository
+import io.cryptoblk.networkmap.infra.NetworkParametersRepository
 import io.dropwizard.Application
 import io.dropwizard.Configuration
 import io.dropwizard.setup.Environment
@@ -46,12 +48,17 @@ class Application: Application<NetworkMapConfig>() {
     override fun run(configuration: NetworkMapConfig, environment: Environment) {
         println("Running ${configuration.name}! -- cache for ${configuration.expiration}s")
 
+        // Infra Adapters
         val inMemoryNodeInfoRepo: NodeInfoRepository = InMemoryNodeInfoRepository
+        val inMemoryNetworkParametersRepo: NetworkParametersRepository = InMemoryNetworkParametersRepository
 
-        val nodeInfoHandler: NetworkMapService = NetworkMapHandler(inMemoryNodeInfoRepo)
+        // Domain
+        val nodeInfoHandler: NetworkMapService = NetworkMapHandler(inMemoryNodeInfoRepo, inMemoryNetworkParametersRepo)
 
+        // API Adapter
         val networkMapAPI = NetworkMapAPI(nodeInfoHandler)
 
+        // API config
         environment.jersey().register(networkMapAPI)
         environment.servlets().addFilter("CacheControlFilter", CacheControlFilter(configuration.expiration)).
             addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*")
