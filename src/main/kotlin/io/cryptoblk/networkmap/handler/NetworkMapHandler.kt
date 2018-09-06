@@ -1,5 +1,9 @@
 package io.cryptoblk.networkmap.handler
 
+import io.cryptoblk.networkmap.dao.NodeInfoDAO
+import io.restassured.builder.ResponseBuilder
+import kotlinx.coroutines.experimental.launch
+import kotlin.coroutines.experimental.startCoroutine
 import net.corda.core.crypto.SecureHash
 import net.corda.core.internal.signWithCert
 import net.corda.core.node.NetworkParameters
@@ -36,10 +40,6 @@ class NetworkMapHandler {
     private var networkMapCert: X509Certificate? = null
     private var keyPair: KeyPair? = null
 
-    private val nodeInfos: ConcurrentMap<SecureHash, ByteArray> = ConcurrentHashMap()
-
-    private val notaries: CopyOnWriteArrayList<NotaryInfo> = CopyOnWriteArrayList()
-
     private val networkParams: ConcurrentMap<SecureHash, ByteArray> = ConcurrentHashMap()
 
     companion object {
@@ -74,11 +74,11 @@ class NetworkMapHandler {
         // For the node to upload its signed NodeInfo object to the network map.
         val factory = SerializerFactory(AllWhitelist, ClassLoader.getSystemClassLoader())
         val signedNodeInfo = DeserializationInput(factory).deserialize(SerializedBytes<SignedNodeInfo>(input))
-        nodeInfos[signedNodeInfo.raw.hash] = signedNodeInfo.serialize().bytes
-        val ouVal = signedNodeInfo.verified().legalIdentities[0].name.organisationUnit
-        if (ouVal != null && ouVal == "Notary") {
-            notaries.add(NotaryInfo(signedNodeInfo.verified().legalIdentities[0], true))
+
+        launch {
+            NodeInfoDAO.addNodeInfoByHash(signedNodeInfo.raw.hash, signedNodeInfo.serialize().bytes)
         }
+
         return Response.ok().build()
     }
 
@@ -89,33 +89,50 @@ class NetworkMapHandler {
     }
 
     @GET
-    fun generateNetworkMap(): ByteArray {
+    fun generateNetworkMap(): Response {
         // Retrieve the current signed network map object. The entire object is signed with the network map certificate which is also attached.
         val signedNetParams = stubNetworkParameters.
-            copy(notaries = notaries, epoch = stubNetworkParameters.epoch + notaries.size).
+            copy(notaries = emptyList(), epoch = stubNetworkParameters.epoch).
             signWithCert(keyPair!!.private, networkMapCert!!)
         val paramHash = signedNetParams.raw.hash
         networkParams[paramHash] = signedNetParams.serialize().bytes
 
-        val networkMap = NetworkMap(nodeInfos.keys.toList(), paramHash, null)
+        var nodeInfos: ConcurrentMap<SecureHash, ByteArray>? = null
+        launch {
+            nodeInfos = NodeInfoDAO.getNodeInfos()
+        }
+
+        val nodeInfosBytes = nodeInfos?.let { it.keys.toList() } ?: emptyList()
+        val networkMap = NetworkMap(nodeInfosBytes, paramHash, null)
         val signedNetworkMap = networkMap.signWithCert(keyPair!!.private, networkMapCert!!)
-        return signedNetworkMap.serialize().bytes
+
+        return Response.ok(signedNetworkMap.serialize().bytes).build()
     }
 
     @GET
     @Path("/node-info/{hash}")
-    fun handleNodeInfo(@PathParam("hash") h: String): ByteArray {
+    fun handleNodeInfo(@PathParam("hash") h: String): Response {
         // Retrieve a signed NodeInfo as specified in the network map object.
         val hash = SecureHash.parse(h)
-        return nodeInfos[hash]!!
+
+        var nodeInfo: ByteArray? = null
+        launch {
+            nodeInfo =  NodeInfoDAO.getNodeInfoByHash(hash)!!
+        }
+
+        return nodeInfo?.let {
+            return Response.ok(it).build()
+        } ?: Response.status(404).build()
     }
 
     @GET
     @Path("/network-parameters/{hash}")
-    fun handleNetworkParam(@PathParam("hash") h: String): ByteArray {
+    fun handleNetworkParam(@PathParam("hash") h: String): Response {
         // Retrieve the signed network parameters (see below). The entire object is signed with the network map certificate which is also attached.
         val hash = SecureHash.parse(h)
-        return networkParams[hash]!!
-    }
 
+        return networkParams[hash]?.let {
+            return Response.ok(it).build()
+        } ?: Response.status(404).build()
+    }
 }
