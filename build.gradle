@@ -44,6 +44,8 @@ dependencies {
     testRuntime(
             'org.junit.jupiter:junit-jupiter-engine:5.1.0'
     )
+    testImplementation "io.mockk:mockk:1.8.7"
+    testCompile "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.25.3"
 }
 
 compileKotlin {
