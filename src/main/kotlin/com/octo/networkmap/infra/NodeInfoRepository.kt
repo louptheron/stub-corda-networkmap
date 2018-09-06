@@ -1,4 +1,4 @@
-package io.cryptoblk.networkmap.infra
+package com.octo.networkmap.infra
 
 import net.corda.core.crypto.SecureHash
 

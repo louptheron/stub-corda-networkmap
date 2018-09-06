@@ -1,12 +1,12 @@
-package io.cryptoblk.networkmap
+package com.octo.networkmap
 
-import io.cryptoblk.networkmap.infra.InMemoryNodeInfoRepository
-import io.cryptoblk.networkmap.infra.NodeInfoRepository
-import io.cryptoblk.networkmap.domain.NetworkMapHandler
-import io.cryptoblk.networkmap.domain.NetworkMapService
-import io.cryptoblk.networkmap.api.NetworkMapAPI
-import io.cryptoblk.networkmap.infra.InMemoryNetworkParametersRepository
-import io.cryptoblk.networkmap.infra.NetworkParametersRepository
+import com.octo.networkmap.infra.InMemoryNodeInfoRepository
+import com.octo.networkmap.infra.NodeInfoRepository
+import com.octo.networkmap.domain.NetworkMapHandler
+import com.octo.networkmap.domain.NetworkMapService
+import com.octo.networkmap.api.NetworkMapAPI
+import com.octo.networkmap.infra.InMemoryNetworkParametersRepository
+import com.octo.networkmap.infra.NetworkParametersRepository
 import io.dropwizard.Application
 import io.dropwizard.Configuration
 import io.dropwizard.setup.Environment

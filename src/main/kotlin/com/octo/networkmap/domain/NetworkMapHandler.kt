@@ -1,7 +1,7 @@
-package io.cryptoblk.networkmap.domain
+package com.octo.networkmap.domain
 
-import io.cryptoblk.networkmap.infra.NetworkParametersRepository
-import io.cryptoblk.networkmap.infra.NodeInfoRepository
+import com.octo.networkmap.infra.NetworkParametersRepository
+import com.octo.networkmap.infra.NodeInfoRepository
 import kotlinx.coroutines.experimental.runBlocking
 import net.corda.core.crypto.SecureHash
 import net.corda.core.internal.signWithCert
@@ -67,16 +67,16 @@ class NetworkMapHandler(
         val signedNetParams = stubNetworkParameters.
                 copy(notaries = emptyList(), epoch = stubNetworkParameters.epoch).
                 signWithCert(keyPair!!.private, networkMapCert!!)
-        val paramHash = signedNetParams.raw.hash
-        networkParametersRepository.save(Pair(paramHash, signedNetParams.serialize().bytes))
+        val networkParametersHash = signedNetParams.raw.hash
+        networkParametersRepository.save(Pair(networkParametersHash, signedNetParams.serialize().bytes))
 
-        val nodeInfos = nodeInfoRepository.findAll()
+        val networkNodeInfosHashes = nodeInfoRepository.findAll()?.map { it.first } ?: emptyList()
 
-        val nodeInfosHashes = nodeInfos?.map { it.first } ?: emptyList()
-        val networkMap = NetworkMap(nodeInfosHashes, paramHash, null)
+        val networkMap = NetworkMap(networkNodeInfosHashes, networkParametersHash, null)
         val signedNetworkMap = networkMap.signWithCert(keyPair!!.private, networkMapCert!!)
 
-        signedNetworkMap.serialize().bytes        }
+        signedNetworkMap.serialize().bytes
+    }
 
     override fun getNodeInfo(hash: SecureHash): ByteArray? = runBlocking {
         nodeInfoRepository.findByHash(hash)?.let {

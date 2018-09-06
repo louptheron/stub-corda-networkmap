@@ -1,10 +1,10 @@
-package io.cryptoblk.networkmap.infra
+package com.octo.networkmap.infra
 
 import net.corda.core.crypto.SecureHash
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 
-object InMemoryNetworkParametersRepository : NetworkParametersRepository{
+object InMemoryNetworkParametersRepository : NetworkParametersRepository {
     private val networkParam: ConcurrentMap<SecureHash, ByteArray> = ConcurrentHashMap()
 
     override suspend fun findByHash(hash: SecureHash): ByteArray? {
