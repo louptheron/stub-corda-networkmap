@@ -24,13 +24,16 @@ import net.corda.nodeapi.internal.serialization.SerializationFactoryImpl
 import net.corda.nodeapi.internal.serialization.amqp.AMQPServerSerializationScheme
 import net.corda.nodeapi.internal.serialization.amqp.DeserializationInput
 import net.corda.nodeapi.internal.serialization.amqp.SerializerFactory
+import org.glassfish.jersey.server.model.Parameterized
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
 
 @ExtendWith(MockKExtension::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class NetworkMapHandlerTest : TestHelper() {
+
     @MockK
     lateinit var networkParametersRepository: NetworkParametersRepository
 
@@ -51,7 +54,7 @@ internal class NetworkMapHandlerTest : TestHelper() {
 
         // Then
         val factory = SerializerFactory(AllWhitelist, ClassLoader.getSystemClassLoader())
-        val signedNetworkMap = DeserializationInput(factory).deserialize(SerializedBytes<SignedNetworkMap>(signedNetworkMapBytes))
+        DeserializationInput(factory).deserialize(SerializedBytes<SignedNetworkMap>(signedNetworkMapBytes))
 
     }
 }

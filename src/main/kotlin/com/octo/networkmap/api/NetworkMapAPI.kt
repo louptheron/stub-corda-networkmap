@@ -1,7 +1,6 @@
 package com.octo.networkmap.api
 
 import com.octo.networkmap.domain.NetworkMapService
-import kotlinx.coroutines.experimental.runBlocking
 import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.serialization.serialize

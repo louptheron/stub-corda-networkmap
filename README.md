@@ -1,5 +1,8 @@
-# Test Stub Corda 3.0 Network Map
-A quick simple HTTP-based Corda network map for testing (not meant for production)
+# Corda 3.0 Network Map
+
+A refactor of a [HTTP-based network map for testing](https://github.com/tomtau/stub-corda-networkmap) :
+- Clean architecture with in-memory and database (TODO) repositories.
+- Tests (TODO)
 
 ## Running
 ```
@@ -25,19 +28,8 @@ that's then used by Corda nodes how often they'd query the network map.
 
 Additional server properties can be configured using the standard Dropwizard configuration: http://www.dropwizard.io/1.3.0/docs/manual/configuration.html#http
 
-## Connecting nodes: adding notary
-Each node that will have `OU=Notary` in its legal name will be automatically added 
-to this test stub network map as a notary. Adding notary nodes changes the network map
-and normally would require signalling an upgrade, and having node operators manually 
-approve the network map update (via RPC / node shell).
+## Connecting nodes
 
 For testing, the temporary procedure is:
 
-1. run notary nodes with `OU=Notary` in their legal names and compatibilityZoneURL in their
-config (e.g. `compatibilityZoneURL: "http://localhost:8080"`).
-
-2. notary nodes will self-shutdown with an exception: `network.NetworkMapUpdater.updateNetworkMapCache - Node is using parameters with hash: ... but network map is advertising: ...`
-
-3. delete `network-parameters` in the notary nodes' directories and run them again
-
-4. run all other nodes with the compatibilityZoneURL in their configs
+1. run all other nodes with the compatibilityZoneURL in their configs
